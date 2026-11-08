@@ -86,6 +86,7 @@
     rig.classList.toggle('speaking', on);
   }
 
+  let rafId = null;
   function frame(t) {
     micLevel += (micTarget - micLevel) * 0.35;
 
@@ -108,9 +109,22 @@
       setSpeaking(false);
     }
 
-    requestAnimationFrame(frame);
+    rafId = requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
+  function startAnim() {
+    if (rafId == null) rafId = requestAnimationFrame(frame);
+  }
+  startAnim();
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (rafId != null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    } else {
+      startAnim();
+    }
+  });
 
   function happy() {
     rig.classList.remove('happy');

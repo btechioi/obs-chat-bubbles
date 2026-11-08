@@ -139,7 +139,7 @@
     refreshTimer = setTimeout(() => {
       updatePreview();
       updateUrlBox();
-    }, 260);
+    }, 320);
     pollStatus();
   }
 
@@ -275,5 +275,13 @@
   updatePreview();
   updateUrlBox();
   pollStatus();
-  setInterval(pollStatus, 5000);
+  let pollInterval = setInterval(pollStatus, 8000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+    } else if (!pollInterval) {
+      pollStatus();
+      pollInterval = setInterval(pollStatus, 8000);
+    }
+  });
 })();

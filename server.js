@@ -168,11 +168,14 @@ class MicHub {
         }
         const rms = Math.sqrt(sum / (chunk.length / 2));
         const now = Date.now();
-        if (now - this.lastSent >= 50) {
-          this.lastSent = now;
-          this.level = Math.min(1, Math.round(rms * 1000) / 1000);
-          this.send(this.level);
-        }
+       const level = Math.min(1, Math.round(rms * 1000) / 1000);
+       // Only push when the level actually moves (or as a keep-alive), so an
+       // idle microphone does not flood the avatar page with SSE frames.
+       if (now - this.lastSent >= 50 && (level !== this.level || now - this.lastSent >= 200)) {
+         this.lastSent = now;
+         this.level = level;
+         this.send(this.level);
+       }
       }
     });
   }
@@ -758,16 +761,31 @@ const MIME = {
   '.woff2': 'font/woff2',
 };
 
+const FILE_CACHE = new Map();
+
 function serveFile(res, file, status = 200) {
+  const cached = FILE_CACHE.get(file);
+  if (cached) {
+    res.writeHead(status, {
+      'content-type': cached.mime,
+      'cache-control': 'public, max-age=300',
+      'content-length': cached.buf.length,
+    });
+    res.end(cached.buf);
+    return;
+  }
   fs.readFile(file, (err, buf) => {
     if (err) {
       res.writeHead(404, { 'content-type': 'text/plain' });
       res.end('not found');
       return;
     }
+    const mime = MIME[path.extname(file)] || 'application/octet-stream';
+    FILE_CACHE.set(file, { buf, mime });
     res.writeHead(status, {
-      'content-type': MIME[path.extname(file)] || 'application/octet-stream',
-      'cache-control': 'no-store',
+      'content-type': mime,
+      'cache-control': 'public, max-age=300',
+      'content-length': buf.length,
     });
     res.end(buf);
   });
@@ -924,7 +942,7 @@ const server = http.createServer(async (req, res) => {
         } catch {
           /* noop */
         }
-      }, 15_000);
+      }, 25_000);
 
       req.on('close', () => {
         clearInterval(ping);

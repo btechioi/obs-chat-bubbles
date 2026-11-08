@@ -289,7 +289,7 @@
     applyState(data);
     clearAll();
     const recent = (data.messages || []).slice(-max);
-    recent.forEach((m, i) => setTimeout(() => addMessage(m), i * 90));
+    recent.forEach((m, i) => setTimeout(() => addMessage(m), i * 60));
   });
 
   es.addEventListener('chat', (ev) => {
