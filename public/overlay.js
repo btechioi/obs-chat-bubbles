@@ -220,7 +220,7 @@
 
     const head = el('div', 'head');
     const name = el('span', 'name', m.name || 'viewer');
-    name.style.color = nameColor(m.name || 'viewer');
+    name.style.color = m.color || nameColor(m.name || 'viewer');
     head.appendChild(name);
 
     for (const b of m.badges || []) {

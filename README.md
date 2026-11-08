@@ -51,7 +51,7 @@ Query parameters you can also set by hand:
 
 | Param | Values | Default |
 |---|---|---|
-| `target` | `@handle`, video URL or 11-char video id | — (required) |
+| `target` | `@handle`, video URL or 11-char video id; or Twitch: `twitch:channel`, `#channel`, `twitch.tv/channel` | — (required) |
 | `theme` | `glass`, `light`, `neon` | `glass` |
 | `pos` | `bl`, `br`, `tl`, `tr` | `bl` |
 | `max` | 3–30 bubbles on screen | `8` |

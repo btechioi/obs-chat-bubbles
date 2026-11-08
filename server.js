@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
+import net from 'node:net';
 import { Innertube, Log } from 'youtubei.js';
 import { createTts, nameForSpeech } from './tts.js';
 
@@ -297,8 +298,17 @@ function parseTarget(raw) {
   const s = String(raw || '').trim();
   if (!s) return null;
 
+  // Twitch channel URL or explicit twitch: prefix.
+  let m = s.match(/twitch\.tv\/([A-Za-z0-9_]{3,25})/i);
+  if (m) return { kind: 'twitch', value: m[1].toLowerCase() };
+  if (/^twitch:/i.test(s)) {
+    const v = s.replace(/^twitch:/i, '').trim().replace(/^#/, '');
+    if (/^[A-Za-z0-9_]{3,25}$/.test(v)) return { kind: 'twitch', value: v.toLowerCase() };
+  }
+  if (/^#[A-Za-z0-9_]{3,25}$/.test(s)) return { kind: 'twitch', value: s.slice(1).toLowerCase() };
+
   // Direct video id anywhere in a watch/youtu.be URL.
-  let m = s.match(/(?:youtu\.be\/|[?&]v=)([A-Za-z0-9_-]{11})/);
+  m = s.match(/(?:youtu\.be\/|[?&]v=)([A-Za-z0-9_-]{11})/);
   if (m) return { kind: 'video', value: m[1] };
   if (/^[A-Za-z0-9_-]{11}$/.test(s)) return { kind: 'video', value: s };
 
@@ -312,7 +322,7 @@ function parseTarget(raw) {
   if (m) return { kind: 'channel_id', value: m[1] };
   if (/^UC[A-Za-z0-9_-]{22}$/.test(s)) return { kind: 'channel_id', value: s };
 
-  // A bare word is treated as a handle.
+  // A bare word is treated as a YouTube handle.
   if (/^[A-Za-z0-9_.-]+$/.test(s)) return { kind: 'channel', value: '@' + s };
   return null;
 }
@@ -736,6 +746,423 @@ class ChatRoom {
   }
 }
 
+/* ---------------------------------------------------------------- twitch */
+
+function parseIrcLine(raw) {
+  let line = raw;
+  let tags = null;
+  if (line.startsWith('@')) {
+    const sp = line.indexOf(' ');
+    tags = parseIrcTags(line.slice(1, sp));
+    line = line.slice(sp + 1);
+  }
+  let prefix = null;
+  if (line.startsWith(':')) {
+    const sp = line.indexOf(' ');
+    prefix = line.slice(1, sp);
+    line = line.slice(sp + 1);
+  }
+  let trailing = null;
+  const ti = line.indexOf(' :');
+  if (ti !== -1) {
+    trailing = line.slice(ti + 2);
+    line = line.slice(0, ti);
+  }
+  const parts = line.trim().split(/\s+/).filter(Boolean);
+  const command = parts.shift();
+  return { tags, prefix, command, params: parts, trailing };
+}
+
+function parseIrcTags(s) {
+  const out = {};
+  for (const part of String(s || '').split(';')) {
+    if (!part) continue;
+    const eq = part.indexOf('=');
+    if (eq === -1) {
+      out[part] = true;
+      continue;
+    }
+    out[part.slice(0, eq)] = unescapeIrcTag(part.slice(eq + 1));
+  }
+  return out;
+}
+
+function unescapeIrcTag(v) {
+  return String(v)
+    .replace(/\\:/g, ';')
+    .replace(/\\s/g, ' ')
+    .replace(/\\\\/g, '\\')
+    .replace(/\\r/g, '\r')
+    .replace(/\\n/g, '\n');
+}
+
+function twitchBadges(tag) {
+  const badges = [];
+  const t = tag || '';
+  if (t.includes('broadcaster/')) badges.push({ k: 'owner', label: 'OWNER' });
+  if (t.includes('moderator/')) badges.push({ k: 'mod', label: 'MOD' });
+  if (t.includes('vip/')) badges.push({ k: 'verified', label: 'VIP' });
+  if (t.includes('subscriber/') || t.includes('founder/')) badges.push({ k: 'member', label: 'SUB' });
+  return badges;
+}
+
+function twitchColor(v) {
+  return /^#[0-9a-f]{6}$/i.test(v || '') ? v : null;
+}
+
+function buildTwitchParts(text, emotesTag) {
+  if (!emotesTag) return text ? [{ t: 'x', v: text }] : [];
+  const ranges = [];
+  for (const group of String(emotesTag).split('/')) {
+    if (!group) continue;
+    const [id, rangeStr] = group.split(':');
+    if (!id || !rangeStr) continue;
+    for (const r of rangeStr.split(',')) {
+      const [s, e] = r.split('-').map((n) => Number(n));
+      if (Number.isFinite(s) && Number.isFinite(e)) ranges.push({ id, start: s, end: e });
+    }
+  }
+  ranges.sort((a, b) => a.start - b.start);
+  const parts = [];
+  let pos = 0;
+  for (const r of ranges) {
+    if (r.start > pos) {
+      const slice = text.slice(pos, r.start);
+      if (slice) parts.push({ t: 'x', v: slice });
+    }
+    parts.push({ t: 'e', u: `https://static-cdn.jtvnw.net/emoticons/v2/${r.id}/default/dark/2.0` });
+    pos = r.end + 1;
+  }
+  if (pos < text.length) {
+    const slice = text.slice(pos);
+    if (slice) parts.push({ t: 'x', v: slice });
+  }
+  if (!parts.length && text) parts.push({ t: 'x', v: text });
+  return parts;
+}
+
+class TwitchChatRoom {
+  constructor(target) {
+    this.target = target;
+    this.key = `${target.kind}:${target.value}`;
+    this.clients = new Set();
+    this.messages = [];
+    this.state = 'connecting';
+    this.videoId = target.value;
+    this.title = target.value;
+    this.lastError = '';
+    this.started = false;
+    this.stopped = false;
+    this.ttsClients = 0;
+    this.lastClientAt = Date.now();
+    this.idleTimer = null;
+    this.socket = null;
+    this.buffer = '';
+    this.reconnectTimer = null;
+    this.channel = String(target.value).toLowerCase();
+  }
+
+  broadcast(event, data) {
+    const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    for (const res of this.clients) {
+      try {
+        res.write(payload);
+      } catch {
+        /* client gone */
+      }
+    }
+  }
+
+  setState(state, extra = {}) {
+    this.state = state;
+    if (extra.title !== undefined) this.title = extra.title;
+    if (extra.videoId !== undefined) this.videoId = extra.videoId;
+    if (extra.lastError !== undefined) this.lastError = extra.lastError;
+    this.broadcast('state', {
+      state: this.state,
+      videoId: this.videoId,
+      title: this.title,
+      lastError: this.lastError,
+    });
+  }
+
+  snapshot() {
+    return {
+      key: this.key,
+      state: this.state,
+      videoId: this.videoId,
+      title: this.title,
+      lastError: this.lastError,
+      messages: this.messages.length,
+      clients: this.clients.size,
+    };
+  }
+
+  addClient(res, wantsTts = false) {
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+    this.clients.add(res);
+    if (wantsTts) this.ttsClients++;
+    this.lastClientAt = Date.now();
+    this.ensureRunning();
+  }
+
+  removeClient(res) {
+    this.clients.delete(res);
+    if (res._wantsTts) this.ttsClients = Math.max(0, this.ttsClients - 1);
+    if (this.clients.size > 0) return;
+    this.lastClientAt = Date.now();
+    this.idleTimer = setTimeout(() => {
+      if (this.clients.size === 0) this.stop();
+    }, 60_000);
+  }
+
+  ensureRunning() {
+    if (this.started) return;
+    this.started = true;
+    this.stopped = false;
+    this.connect();
+  }
+
+  stop() {
+    this.stopped = true;
+    this.started = false;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    if (this.idleTimer) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+    try {
+      this.socket?.end();
+    } catch {
+      /* noop */
+    }
+    this.socket = null;
+    this.state = 'idle';
+  }
+
+  connect() {
+    if (this.stopped) return;
+    this.setState('connecting');
+    const nick = 'justinfan' + Math.floor(10000 + Math.random() * 89999);
+    let socket;
+    try {
+      socket = net.connect(6667, 'irc.chat.twitch.tv', () => {
+        try {
+          socket.write('CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership\r\n');
+          socket.write(`NICK ${nick}\r\n`);
+          socket.write(`USER ${nick} 8 * :${nick}\r\n`);
+        } catch {
+          /* noop */
+        }
+      });
+    } catch (e) {
+      this.lastError = shortErr(e);
+      this.setState('error', { lastError: this.lastError });
+      this.scheduleReconnect();
+      return;
+    }
+    this.socket = socket;
+    this.buffer = '';
+    socket.setEncoding('utf8');
+    socket.on('data', (data) => {
+      this.buffer += data;
+      let idx;
+      while ((idx = this.buffer.indexOf('\r\n')) >= 0) {
+        const line = this.buffer.slice(0, idx);
+        this.buffer = this.buffer.slice(idx + 2);
+        this.handleLine(line);
+      }
+    });
+    socket.on('error', (e) => {
+      this.lastError = shortErr(e);
+      log(`[${this.key}] twitch error:`, this.lastError);
+    });
+    socket.on('close', () => {
+      this.socket = null;
+      if (this.stopped) return;
+      this.setState('connecting');
+      this.scheduleReconnect();
+    });
+  }
+
+  scheduleReconnect() {
+    if (this.stopped) return;
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = setTimeout(() => this.connect(), 5000);
+  }
+
+  handleLine(line) {
+    if (!line) return;
+    const parsed = parseIrcLine(line);
+    const { tags, prefix, command, params, trailing } = parsed;
+    if (!command) return;
+
+    if (command === 'PING') {
+      try {
+        this.socket?.write(`PONG :${trailing || ''}\r\n`);
+      } catch {
+        /* noop */
+      }
+      return;
+    }
+
+    if (command === '001') {
+      try {
+        this.socket?.write(`JOIN #${this.channel}\r\n`);
+      } catch {
+        /* noop */
+      }
+      return;
+    }
+
+    if (command === 'JOIN') {
+      this.setState('live', { title: this.channel });
+      return;
+    }
+
+    if (command === 'PRIVMSG') {
+      const msg = this.normalizeChat(tags, prefix, params, trailing);
+      if (msg) this.push(msg);
+      return;
+    }
+
+    if (command === 'USERNOTICE') {
+      this.handleUserNotice(tags, prefix, params, trailing);
+      return;
+    }
+
+    if (command === 'CLEARMSG') {
+      const id = tags?.['target-msg-id'];
+      if (id) {
+        this.messages = this.messages.filter((m) => m.id !== id);
+        this.broadcast('delete', { id });
+      }
+      return;
+    }
+
+    if (command === 'RECONNECT') {
+      try {
+        this.socket?.end();
+      } catch {
+        /* noop */
+      }
+      return;
+    }
+
+    if (/^[45]/.test(command)) {
+      this.lastError = `${command} ${trailing || ''}`.slice(0, 200);
+      this.setState('error', { lastError: this.lastError });
+    }
+  }
+
+  normalizeChat(tags, prefix, params, trailing) {
+    const t = tags || {};
+    const nick = t['display-name'] || (prefix ? prefix.split('!')[0] : 'viewer');
+    const text = trailing || '';
+    const id = t.id || `tw-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const badges = twitchBadges(t.badges);
+    const color = twitchColor(t.color);
+    const parts = buildTwitchParts(text, t.emotes);
+    const base = { id, at: Date.now(), name: nick, avatar: '', badges, color };
+
+    if (t.bits && /^\d+$/.test(t.bits)) {
+      return {
+        ...base,
+        kind: 'paid',
+        amount: `${t.bits} bits`,
+        parts,
+        speak: `${nameForSpeech(nick)} cheered ${t.bits} bits. ${plainText(parts)}`.trim(),
+      };
+    }
+    return { ...base, kind: 'text', parts };
+  }
+
+  handleUserNotice(tags, prefix, params, trailing) {
+    const t = tags || {};
+    const msgId = t['msg-id'] || '';
+    const nick = t['display-name'] || (prefix ? prefix.split('!')[0] : 'viewer');
+    const id = t.id || `tw-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const badges = twitchBadges(t.badges);
+    const color = twitchColor(t.color);
+    const systemMsg = t['system-msg'] ? unescapeIrcTag(t['system-msg']) : '';
+    const userText = trailing || '';
+    const base = { id, at: Date.now(), name: nick, avatar: '', badges, color };
+
+    if (msgId === 'sub' || msgId === 'resub' || msgId === 'subgift' || msgId === 'anonsubgift') {
+      const text = userText || systemMsg || 'Subscribed!';
+      const msg = {
+        ...base,
+        kind: 'member',
+        parts: [{ t: 'x', v: text }],
+        speak: `${nameForSpeech(nick)} just became a member. ${text}`.trim(),
+      };
+      this.push(msg);
+      return;
+    }
+
+    if (msgId === 'raid') {
+      const raider = t['msg-param-displayName'] || nick;
+      const viewers = t['msg-param-viewerCount'] || '';
+      const text = viewers ? `${raider} is raiding with ${viewers} viewers!` : `${raider} is raiding!`;
+      const msg = {
+        id,
+        at: Date.now(),
+        name: raider,
+        avatar: '',
+        badges,
+        color,
+        kind: 'system',
+        parts: [{ t: 'x', v: text }],
+      };
+      this.push(msg);
+      return;
+    }
+
+    if (systemMsg || userText) {
+      const text = userText || systemMsg;
+      this.push({
+        id,
+        at: Date.now(),
+        name: nick,
+        avatar: '',
+        badges,
+        color,
+        kind: 'system',
+        parts: [{ t: 'x', v: text }],
+      });
+    }
+  }
+
+  speak(msg) {
+    if (!tts.ok || this.ttsClients <= 0 || !msg.speak) return;
+    tts
+      .synthesize(msg.speak)
+      .then((r) => {
+        if (r && !this.stopped) this.broadcast('tts', { id: msg.id, url: r.url, duration: r.durationMs || 0 });
+      })
+      .catch((e) => log(`[${this.key}] tts error:`, shortErr(e)));
+  }
+
+  push(msg, { initial = false, silent = false, ephemeral = false } = {}) {
+    if (!ephemeral) {
+      this.messages.push(msg);
+      if (this.messages.length > MAX_BUFFER) {
+        this.messages.splice(0, this.messages.length - MAX_BUFFER);
+      }
+    }
+    if (!initial || this.clients.size) {
+      this.broadcast('chat', { ...msg, initial: !!initial, silent: !!silent });
+    }
+    if (!initial && (msg.kind === 'paid' || msg.kind === 'member')) this.speak(msg);
+  }
+}
+
 /* ----------------------------------------------------------------- server */
 
 const rooms = new Map();
@@ -744,7 +1171,7 @@ function getRoom(target) {
   const key = `${target.kind}:${target.value}`;
   let room = rooms.get(key);
   if (!room) {
-    room = new ChatRoom(target);
+    room = target.kind === 'twitch' ? new TwitchChatRoom(target) : new ChatRoom(target);
     rooms.set(key, room);
   }
   return room;
