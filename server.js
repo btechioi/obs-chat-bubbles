@@ -764,8 +764,16 @@ const MIME = {
 const FILE_CACHE = new Map();
 
 function serveFile(res, file, status = 200) {
+  let st;
+  try {
+    st = fs.statSync(file);
+  } catch {
+    res.writeHead(404, { 'content-type': 'text/plain' });
+    res.end('not found');
+    return;
+  }
   const cached = FILE_CACHE.get(file);
-  if (cached) {
+  if (cached && cached.mtime === st.mtimeMs) {
     res.writeHead(status, {
       'content-type': cached.mime,
       'cache-control': 'public, max-age=300',
@@ -781,7 +789,7 @@ function serveFile(res, file, status = 200) {
       return;
     }
     const mime = MIME[path.extname(file)] || 'application/octet-stream';
-    FILE_CACHE.set(file, { buf, mime });
+    FILE_CACHE.set(file, { buf, mime, mtime: st.mtimeMs });
     res.writeHead(status, {
       'content-type': mime,
       'cache-control': 'public, max-age=300',
