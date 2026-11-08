@@ -22,6 +22,11 @@
   let state = { ...DEFAULTS, ...read() };
   let refreshTimer = null;
 
+  // OBS custom browser docks run in a narrow CEF panel; enable a compact layout.
+  const params = new URLSearchParams(location.search);
+  const dockMode = params.get('dock') === '1' || !!window.obsstudio;
+  if (dockMode) document.body.classList.add('dock');
+
   const $ = (id) => document.getElementById(id);
 
   function read() {
@@ -245,6 +250,17 @@
       flash($('copy-avatar'), 'Copied ✓');
     } catch {
       flash($('copy-avatar'), 'Copy failed');
+    }
+  });
+
+  $('copy-model').addEventListener('click', async () => {
+    const url = '/model' + (state.target ? '?target=' + encodeURIComponent(state.target) : '');
+    const full = location.origin + url;
+    try {
+      await navigator.clipboard.writeText(full);
+      flash($('copy-model'), 'Copied ✓');
+    } catch {
+      flash($('copy-model'), 'Copy failed');
     }
   });
 
