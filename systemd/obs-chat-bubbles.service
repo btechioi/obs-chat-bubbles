@@ -1,0 +1,20 @@
+[Unit]
+Description=YouTube chat bubbles overlay for OBS
+Documentation=file:%h/.local/share/obs-chat-bubbles/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/share/obs-chat-bubbles
+ExecStart=/usr/bin/node %h/.local/share/obs-chat-bubbles/server.js
+Environment=PORT=4919
+Environment=HOST=127.0.0.1
+Restart=always
+RestartSec=3
+Nice=5
+# small, chat-only service
+MemoryMax=1G
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,18 @@
+{
+  "name": "obs-chat-bubbles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "YouTube live chat as custom bubbles in OBS (browser source overlay)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "youtubei.js": "^18.3.0"
+  }
+}

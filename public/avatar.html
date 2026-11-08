@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cat Boy Avatar</title>
+  <link rel="stylesheet" href="/assets/avatar.css" />
+</head>
+<body>
+  <div id="stage">
+    <div id="char" class="char">
+      <svg id="rig" viewBox="0 0 600 780" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" aria-label="cat boy avatar">
+        <defs>
+          <linearGradient id="faceGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fff3e9" />
+            <stop offset="70%" stop-color="#ffe3d1" />
+            <stop offset="100%" stop-color="#ffd6c1" />
+          </linearGradient>
+          <linearGradient id="hoodieGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--hoodie)" />
+            <stop offset="100%" stop-color="var(--hoodie-dark)" />
+          </linearGradient>
+          <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--hair-light)" />
+            <stop offset="55%" stop-color="var(--hair)" />
+            <stop offset="100%" stop-color="var(--hair-dark)" />
+          </linearGradient>
+          <linearGradient id="irisGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3a1d12" />
+            <stop offset="38%" stop-color="var(--eye)" />
+            <stop offset="100%" stop-color="var(--eye-dark)" />
+          </linearGradient>
+          <linearGradient id="bellGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffe08a" />
+            <stop offset="100%" stop-color="#e0a12c" />
+          </linearGradient>
+          <radialGradient id="blushGrad">
+            <stop offset="0%" stop-color="#ff8fa3" stop-opacity=".55" />
+            <stop offset="100%" stop-color="#ff8fa3" stop-opacity="0" />
+          </radialGradient>
+          <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0a0510" flood-opacity=".45" />
+          </filter>
+          <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="6" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        <!-- tail -->
+        <g id="tail">
+          <path d="M468 726 C 552 718 572 620 540 560 C 514 528 486 546 500 578"
+                fill="none" stroke="var(--hair-dark)" stroke-width="48" stroke-linecap="round" />
+          <path d="M468 726 C 552 718 572 620 540 560 C 514 528 486 546 500 578"
+                fill="none" stroke="url(#hairGrad)" stroke-width="38" stroke-linecap="round" />
+          <path d="M540 560 C 518 532 492 544 504 574"
+                fill="none" stroke="var(--hair-light)" stroke-width="20" stroke-linecap="round" opacity=".55" />
+        </g>
+
+        <!-- back hair -->
+        <path d="M300 96 C 438 96 505 196 498 336 C 494 430 472 486 448 520 L 424 480
+                 C 404 512 366 526 300 526 C 234 526 196 512 176 480 L 152 520
+                 C 128 486 106 430 102 336 C 95 196 162 96 300 96 Z" fill="var(--hair)" />
+
+        <!-- ears -->
+        <g id="ear-l" class="ear">
+          <path d="M142 250 C 114 184 104 122 114 68 C 174 86 234 136 270 202 Z" fill="var(--hair-dark)" />
+          <path d="M174 208 C 162 180 158 154 162 130 C 188 144 208 166 222 188 Z" fill="var(--ear-inner)" />
+          <path d="M174 208 C 162 180 158 154 162 130" stroke="#fff" stroke-opacity=".2" stroke-width="6"
+                fill="none" stroke-linecap="round" />
+          <path d="M120 78 C 156 94 200 126 234 158" stroke="var(--hair-light)" stroke-width="5"
+                fill="none" stroke-linecap="round" opacity=".35" />
+        </g>
+        <g id="ear-r" class="ear">
+          <g transform="translate(600 0) scale(-1 1)">
+            <path d="M142 250 C 114 184 104 122 114 68 C 174 86 234 136 270 202 Z" fill="var(--hair-dark)" />
+            <path d="M174 208 C 162 180 158 154 162 130 C 188 144 208 166 222 188 Z" fill="var(--ear-inner)" />
+            <path d="M174 208 C 162 180 158 154 162 130" stroke="#fff" stroke-opacity=".2" stroke-width="6"
+                  fill="none" stroke-linecap="round" />
+            <path d="M120 78 C 156 94 200 126 234 158" stroke="var(--hair-light)" stroke-width="5"
+                  fill="none" stroke-linecap="round" opacity=".35" />
+          </g>
+        </g>
+
+        <!-- body -->
+        <g id="body">
+          <path d="M300 516 C 384 516 474 566 502 664 L 522 780 L 78 780 L 98 664
+                   C 126 566 216 516 300 516 Z" fill="url(#hoodieGrad)" />
+          <!-- arms -->
+          <path d="M118 640 C 108 700 104 740 104 780 L 170 780 C 168 720 178 676 196 640 Z" fill="#000" opacity=".12" />
+          <path d="M482 640 C 492 700 496 740 496 780 L 430 780 C 432 720 422 676 404 640 Z" fill="#000" opacity=".12" />
+          <path d="M150 600 C 122 660 112 720 112 780" stroke="var(--hoodie-dark)" stroke-width="6" fill="none" opacity=".55" />
+          <path d="M450 600 C 478 660 488 720 488 780" stroke="var(--hoodie-dark)" stroke-width="6" fill="none" opacity=".55" />
+          <path d="M300 516 C 245 516 175 548 140 610 C 190 570 245 552 300 552
+                   C 355 552 410 570 460 610 C 425 548 355 516 300 516 Z" fill="#000" opacity=".12" />
+          <!-- neck -->
+          <path d="M264 430 L 336 430 L 340 522 C 322 540 278 540 260 522 Z" fill="var(--skin)" />
+          <path d="M264 430 L 336 430 L 336 470 C 312 488 288 488 264 470 Z" fill="var(--skin-shade)" opacity=".65" />
+          <!-- hood collar -->
+          <path d="M188 552 C 224 500 376 500 412 552 C 392 590 338 606 300 606 C 262 606 208 590 188 552 Z"
+                fill="var(--hoodie-dark)" />
+          <path d="M188 552 C 220 512 380 512 412 552" stroke="#000" stroke-opacity=".25" stroke-width="10" fill="none" />
+          <path d="M204 548 C 240 516 360 516 396 548" stroke="var(--hoodie-light)" stroke-width="7"
+                fill="none" stroke-linecap="round" opacity=".6" />
+          <!-- drawstrings -->
+          <path d="M264 566 C 256 606 260 638 250 672" stroke="var(--string)" stroke-width="8"
+                fill="none" stroke-linecap="round" />
+          <path d="M336 566 C 344 606 340 638 350 672" stroke="var(--string)" stroke-width="8"
+                fill="none" stroke-linecap="round" />
+          <circle cx="249" cy="678" r="8" fill="var(--string)" />
+          <circle cx="351" cy="678" r="8" fill="var(--string)" />
+          <!-- paw print on chest -->
+          <g opacity=".22" fill="#fff">
+            <ellipse cx="300" cy="700" rx="17" ry="14" />
+            <circle cx="284" cy="680" r="6.5" />
+            <circle cx="298" cy="675" r="6.5" />
+            <circle cx="312" cy="678" r="6" />
+            <circle cx="323" cy="687" r="5" />
+          </g>
+          <!-- collar with bell -->
+          <path d="M258 528 C 280 546 320 546 342 528 L 344 552 C 320 568 280 568 256 552 Z" fill="#241c2b" />
+          <g id="bell" filter="url(#glow)">
+            <circle cx="300" cy="558" r="15" fill="url(#bellGrad)" stroke="#8c6316" stroke-width="2" />
+            <path d="M291 555 H309" stroke="#8c6316" stroke-width="2.5" stroke-linecap="round" />
+            <circle cx="300" cy="563" r="3.2" fill="#8c6316" />
+            <circle cx="295" cy="551" r="3" fill="#fff" opacity=".7" />
+          </g>
+        </g>
+
+        <!-- head -->
+        <g id="head" filter="url(#soft)">
+          <path d="M300 126 C 414 126 480 214 480 318 C 480 428 404 492 300 492
+                   C 196 492 120 428 120 318 C 120 214 186 126 300 126 Z" fill="url(#faceGrad)" />
+          <!-- ears shading at temple -->
+          <path d="M150 300 C 150 400 200 470 300 480 C 240 460 200 400 196 300 Z" fill="var(--skin-shade)" opacity=".25" />
+
+          <!-- brows -->
+          <path d="M196 282 C 214 266 258 264 276 276" stroke="var(--hair-dark)" stroke-width="7"
+                fill="none" stroke-linecap="round" opacity=".85" />
+          <path d="M324 276 C 342 264 386 266 404 282" stroke="var(--hair-dark)" stroke-width="7"
+                fill="none" stroke-linecap="round" opacity=".85" />
+
+          <!-- eyes -->
+          <g id="eyes">
+            <g class="eye" id="eye-l">
+              <ellipse cx="238" cy="336" rx="43" ry="49" fill="#fff8f3" />
+              <ellipse cx="238" cy="338" rx="35" ry="43" fill="url(#irisGrad)" />
+              <ellipse cx="238" cy="338" rx="10" ry="31" fill="#241318" />
+              <ellipse cx="226" cy="320" rx="10" ry="11" fill="#fff" opacity=".95" />
+              <circle cx="251" cy="356" r="5" fill="#fff" opacity=".75" />
+              <path d="M196 312 C 208 288 262 284 281 306" stroke="#2b1c26" stroke-width="8"
+                    fill="none" stroke-linecap="round" />
+              <path d="M199 318 C 214 302 250 298 270 310" stroke="#2b1c26" stroke-width="4"
+                    fill="none" stroke-linecap="round" opacity=".45" />
+            </g>
+            <g class="eye" id="eye-r">
+              <g transform="translate(600 0) scale(-1 1)">
+                <ellipse cx="238" cy="336" rx="43" ry="49" fill="#fff8f3" />
+                <ellipse cx="238" cy="338" rx="35" ry="43" fill="url(#irisGrad)" />
+                <ellipse cx="238" cy="338" rx="10" ry="31" fill="#241318" />
+                <ellipse cx="226" cy="320" rx="10" ry="11" fill="#fff" opacity=".95" />
+                <circle cx="251" cy="356" r="5" fill="#fff" opacity=".75" />
+                <path d="M196 312 C 208 288 262 284 281 306" stroke="#2b1c26" stroke-width="8"
+                      fill="none" stroke-linecap="round" />
+                <path d="M199 318 C 214 302 250 298 270 310" stroke="#2b1c26" stroke-width="4"
+                      fill="none" stroke-linecap="round" opacity=".45" />
+              </g>
+            </g>
+          </g>
+
+          <!-- nose -->
+          <path d="M291 382 C 296 388 304 388 309 382" stroke="#d98f76" stroke-width="4.5"
+                fill="none" stroke-linecap="round" />
+
+          <!-- blush -->
+          <ellipse cx="196" cy="400" rx="34" ry="20" fill="url(#blushGrad)" class="blush" />
+          <ellipse cx="404" cy="400" rx="34" ry="20" fill="url(#blushGrad)" class="blush" />
+          <g stroke="#ff7f97" stroke-width="3" stroke-linecap="round" opacity=".5">
+            <path d="M182 396 L 176 404" /><path d="M194 394 L 188 402" /><path d="M206 396 L 200 404" />
+            <path d="M418 396 L 424 404" /><path d="M406 394 L 412 402" /><path d="M394 396 L 400 404" />
+          </g>
+
+          <!-- mouth -->
+          <g id="mouth-closed">
+            <path d="M282 414 C 291 424 309 424 318 414" stroke="#9c4f52" stroke-width="4.5"
+                  fill="none" stroke-linecap="round" />
+            <path d="M306 416 L 312 428 L 300 421 Z" fill="#fff" />
+          </g>
+          <g id="mouth-open">
+            <ellipse cx="300" cy="422" rx="23" ry="19" fill="#5d2432" />
+            <ellipse cx="300" cy="432" rx="15" ry="9" fill="#e8707f" />
+            <path d="M283 412 C 290 407 310 407 317 412" stroke="#fff" stroke-width="4"
+                  fill="none" stroke-linecap="round" opacity=".9" />
+          </g>
+
+          <!-- whisker dots -->
+          <g fill="#c98a72" opacity=".5">
+            <circle cx="165" cy="372" r="2.4" /><circle cx="158" cy="384" r="2.4" /><circle cx="164" cy="396" r="2.4" />
+            <circle cx="435" cy="372" r="2.4" /><circle cx="442" cy="384" r="2.4" /><circle cx="436" cy="396" r="2.4" />
+          </g>
+        </g>
+
+        <!-- front hair -->
+        <g id="bangs">
+          <path d="M300 104 C 402 104 474 158 474 262
+                   C 452 240 442 286 414 256 C 404 292 380 268 366 300
+                   C 350 258 338 268 326 238 C 312 278 296 250 282 288
+                   C 266 252 250 272 236 246 C 220 282 198 258 182 290
+                   C 166 252 152 270 138 246 C 146 160 208 104 300 104 Z"
+                fill="url(#hairGrad)" />
+          <path d="M300 104 C 402 104 474 158 474 262 C 470 200 430 150 360 132
+                   C 400 160 420 190 428 230 C 410 180 360 146 300 146
+                   C 240 146 190 180 172 230 C 180 190 200 160 240 132
+                   C 170 150 130 200 126 262 C 126 158 198 104 300 104 Z"
+                fill="#fff" opacity=".07" />
+          <!-- side locks -->
+          <path d="M132 238 C 118 300 124 352 154 396 C 146 352 152 302 170 260 Z" fill="var(--hair)" />
+          <path d="M468 238 C 482 300 476 352 446 396 C 454 352 448 302 430 260 Z" fill="var(--hair)" />
+          <!-- ahoge -->
+          <path d="M299 112 C 300 70 328 50 350 64 C 366 75 356 98 337 94 C 350 88 348 75 336 72 C 320 68 310 88 312 116"
+                fill="none" stroke="var(--hair)" stroke-width="13" stroke-linecap="round" />
+          <!-- small ear ring -->
+          <circle cx="143" cy="196" r="8" fill="none" stroke="#dfe6f5" stroke-width="3.5" />
+        </g>
+
+        <!-- sparkles -->
+        <g id="sparkles" class="sparkles">
+          <path class="spark s1" d="M120 300 l7 18 18 7 -18 7 -7 18 -7 -18 -18 -7 18 -7 Z" />
+          <path class="spark s2" d="M486 330 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5 Z" />
+          <path class="spark s3" d="M170 150 l6 15 15 6 -15 6 -6 15 -6 -15 -15 -6 15 -6 Z" />
+          <path class="spark s4" d="M440 160 l6 15 15 6 -15 6 -6 15 -6 -15 -15 -6 15 -6 Z" />
+        </g>
+      </svg>
+    </div>
+  </div>
+  <script src="/assets/avatar.js"></script>
+</body>
+</html>

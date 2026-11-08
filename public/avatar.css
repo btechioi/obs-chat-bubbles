@@ -1,0 +1,167 @@
+:root {
+  --hair: #2b3049;
+  --hair-light: #4b5478;
+  --hair-dark: #191d2c;
+  --skin: #ffe6d5;
+  --skin-shade: #f0b9a3;
+  --ear-inner: #f7a8b8;
+  --eye: #ffb347;
+  --eye-dark: #d9761b;
+  --hoodie: #2f3d5c;
+  --hoodie-dark: #1c2537;
+  --hoodie-light: #93a7d8;
+  --string: #f2ead9;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: Inter, "Segoe UI", Roboto, sans-serif;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* The source box is the model's stage. x/y/size are set live by the
+   control panel, so the character can be moved and resized without touching OBS. */
+#char {
+  position: absolute;
+  inset: 0;
+}
+
+#rig {
+  position: absolute;
+  right: calc((1 - var(--x, 1)) * 100%);
+  bottom: calc((1 - var(--y, 1)) * 100%);
+  height: calc(var(--size, 0.98) * 100%);
+  width: auto;
+  aspect-ratio: 600 / 780;
+  overflow: visible;
+  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.35));
+}
+
+#char.flip #rig { transform: scaleX(-1); }
+
+
+/* ------------------------------------------------------------ idle motion */
+
+#head {
+  animation: sway 9s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 94%;
+}
+
+#body {
+  animation: breathe 6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+#tail {
+  animation: tail-sway 4.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 18% 92%;
+}
+
+#ear-l, #ear-r {
+  transform-box: fill-box;
+  transform-origin: 50% 96%;
+}
+
+#ear-l.twitch { animation: twitch-l 0.55s ease; }
+#ear-r.twitch { animation: twitch-r 0.55s ease; }
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-1.1deg) translateY(0); }
+  50% { transform: rotate(1.1deg) translateY(-3px); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-4px) scaleY(1.008); }
+}
+
+@keyframes tail-sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(6deg); }
+}
+
+@keyframes twitch-l {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(-9deg); }
+  60% { transform: rotate(4deg); }
+}
+
+@keyframes twitch-r {
+  0%, 100% { transform: rotate(0); }
+  30% { transform: rotate(9deg); }
+  60% { transform: rotate(-4deg); }
+}
+
+/* ------------------------------------------------------------------ blink */
+
+.eye { transform-box: fill-box; transform-origin: center; }
+.eye.blink { animation: blink 0.17s ease-in-out; }
+
+@keyframes blink {
+  0%, 100% { transform: scaleY(1); }
+  45%, 60% { transform: scaleY(0.06); }
+}
+
+/* --------------------------------------------------------------- speaking */
+
+#mouth-open {
+  opacity: 0;
+  transform: scaleY(0.15);
+  transform-box: view-box;
+  transform-origin: 300px 410px;
+}
+
+
+
+/* -------------------------------------------------------------- reactions */
+
+#rig.happy { animation: hop 0.85s cubic-bezier(0.22, 1.4, 0.36, 1); transform-origin: 50% 100%; }
+
+@keyframes hop {
+  0% { transform: translateY(0) scale(1); }
+  28% { transform: translateY(-16px) scale(1.025); }
+  55% { transform: translateY(0) scale(0.995); }
+  75% { transform: translateY(-6px) scale(1.008); }
+  100% { transform: none; }
+}
+
+.sparkles { opacity: 0; transition: opacity 0.18s ease; }
+#rig.happy .sparkles { opacity: 1; }
+
+.spark {
+  fill: #ffd86b;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 8px rgba(255, 216, 107, 0.8));
+}
+
+#rig.happy .spark { animation: twinkle 0.9s ease-in-out infinite; }
+#rig.happy .spark.s2 { animation-delay: 0.15s; }
+#rig.happy .spark.s3 { animation-delay: 0.3s; }
+#rig.happy .spark.s4 { animation-delay: 0.45s; }
+
+@keyframes twinkle {
+  0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.5; }
+  50% { transform: scale(1.15) rotate(25deg); opacity: 1; }
+}
+
+#rig.happy .blush { opacity: 1.6; }
+
+/* subtle "ears perk" while speaking */
+#rig.speaking #ear-l { transform: rotate(-3deg); }
+#rig.speaking #ear-r { transform: rotate(3deg); }

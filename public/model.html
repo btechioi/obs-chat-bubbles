@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cat Boy — Model Control</title>
+  <link rel="stylesheet" href="/assets/control.css" />
+  <link rel="stylesheet" href="/assets/model.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">🐱</div>
+      <div>
+        <h1>Cat Boy — Model Control</h1>
+        <p class="sub">Live controls — changes apply instantly in OBS</p>
+      </div>
+    </div>
+    <div class="status" id="status">
+      <span class="dot" id="dot"></span>
+      <span id="status-label">loading…</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="row">
+        <label class="field">
+          <span class="label">Position X <b id="x-val">100</b>%</span>
+          <input id="x" type="range" min="0" max="100" value="100" />
+        </label>
+        <label class="field">
+          <span class="label">Position Y <b id="y-val">100</b>%</span>
+          <input id="y" type="range" min="0" max="100" value="100" />
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Size <b id="size-val">98</b>%</span>
+          <input id="size" type="range" min="25" max="160" value="98" />
+        </label>
+        <div class="field toggles">
+          <label class="check"><input id="flip" type="checkbox" /> Mirror</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Colors</span>
+        <div class="swatches">
+          <label class="swatch">Hair <input id="c-hair" type="color" value="#2b3049" /></label>
+          <label class="swatch">Hoodie <input id="c-hoodie" type="color" value="#2f3d5c" /></label>
+          <label class="swatch">Eyes <input id="c-eye" type="color" value="#ffb347" /></label>
+          <label class="swatch">Skin <input id="c-skin" type="color" value="#ffe6d5" /></label>
+          <label class="swatch">Ears <input id="c-ears" type="color" value="#f7a8b8" /></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Lip-sync</span>
+        <div class="toggles">
+          <label class="check"><input id="tts" type="checkbox" checked /> Donation voice</label>
+          <label class="check"><input id="mic" type="checkbox" checked /> Microphone</label>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Mic sensitivity <b id="gain-val">1.6</b></span>
+          <input id="gain" type="range" min="0.4" max="4" step="0.1" value="1.6" />
+        </label>
+        <label class="field">
+          <span class="label">Microphone</span>
+          <select id="device"></select>
+        </label>
+      </div>
+
+      <div class="field">
+        <span class="label">Mic level</span>
+        <div class="meter"><div class="meter-fill" id="meter"></div></div>
+        <span class="hint" id="mic-note">Speak to see the level move — this is what drives the mouth.</span>
+      </div>
+
+      <div class="actions">
+        <button id="test-happy" class="ghost" type="button">😺 Happy</button>
+        <button id="test-blink" class="ghost" type="button">😉 Blink</button>
+        <button id="test-talk" class="ghost" type="button">🗣 Talk</button>
+        <button id="reset" class="ghost" type="button">Reset</button>
+      </div>
+
+      <div class="actions">
+        <button id="copy-avatar" class="primary" type="button">Copy avatar URL</button>
+        <a id="open-avatar" class="ghost" target="_blank" rel="noreferrer">Open full-size ↗</a>
+      </div>
+      <div class="urlbox"><code id="avatar-url">—</code></div>
+      <p class="hint">The OBS source already points at this page, so position/size/color changes here
+        apply live. If you changed the OBS source size, keep it full-canvas (1280×720) for the full
+        range of movement.</p>
+    </section>
+
+    <section class="preview-wrap">
+      <div class="preview-head">
+        <span>Live preview · 16:9</span>
+        <span class="muted">drag sliders — OBS updates too</span>
+      </div>
+      <div class="preview">
+        <iframe id="frame" title="Avatar preview" allow="autoplay" src="/avatar"></iframe>
+      </div>
+      <div class="tips">
+        <div><b>1.</b> Move/size the cat boy here — no URL editing needed.</div>
+        <div><b>2.</b> Mic lip-sync uses the server-side capture, so it works inside OBS.</div>
+        <div><b>3.</b> If the mouth still doesn’t move, check the mic level bar while speaking.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/model.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube Chat Bubbles — OBS Setup</title>
+  <link rel="stylesheet" href="/assets/control.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">💬</div>
+      <div>
+        <h1>YouTube Chat Bubbles</h1>
+        <p class="sub">Live chat as custom bubbles, for OBS</p>
+      </div>
+    </div>
+    <div class="status" id="status">
+      <span class="dot" id="dot"></span>
+      <span id="status-label">checking…</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <label class="field">
+        <span class="label">Channel or video</span>
+        <input id="target" type="text" placeholder="@BTech_IOI  ·  youtube.com/@handle/live  ·  video URL or ID" spellcheck="false" />
+        <span class="hint">Use <code>@handle</code> to follow whatever is live on that channel, or paste a specific live video URL / ID.</span>
+      </label>
+
+      <div class="field">
+        <span class="label">Theme</span>
+        <div class="seg" id="theme">
+          <button data-value="glass" class="on">Glass</button>
+          <button data-value="light">Light</button>
+          <button data-value="neon">Neon</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <span class="label">Position</span>
+        <div class="seg" id="pos">
+          <button data-value="bl" class="on">Bottom left</button>
+          <button data-value="br">Bottom right</button>
+          <button data-value="tl">Top left</button>
+          <button data-value="tr">Top right</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Accent</span>
+          <input id="accent" type="color" value="#ff4d6d" />
+        </label>
+        <label class="field">
+          <span class="label">Bubbles on screen <b id="max-val">8</b></span>
+          <input id="max" type="range" min="3" max="15" value="8" />
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Bubble width <b id="width-val">440</b>px</span>
+          <input id="width" type="range" min="300" max="900" step="10" value="440" />
+        </label>
+        <label class="field">
+          <span class="label">Text size <b id="size-val">16</b>px</span>
+          <input id="size" type="range" min="12" max="32" value="16" />
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Fade after <b id="ttl-val">45</b>s <span class="muted">(0 = keep)</span></span>
+          <input id="ttl" type="range" min="0" max="180" step="5" value="45" />
+        </label>
+        <div class="field toggles">
+          <label class="check"><input id="avatars" type="checkbox" checked /> Avatars</label>
+          <label class="check"><input id="status-pill" type="checkbox" /> Status pill</label>
+          <label class="check" title="Demo bubbles also speak donations/members when voice is on"><input id="demo" type="checkbox" /> Demo bubbles <span class="muted">(speaks too)</span></label>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <span class="label">Voice</span>
+          <label class="check"><input id="tts" type="checkbox" checked /> Speak superchats, donations &amp; members</label>
+        </div>
+        <label class="field">
+          <span class="label">Voice volume <b id="vol-val">90</b>%</span>
+          <input id="vol" type="range" min="0" max="100" value="90" />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="test-tts" class="ghost" type="button">🔊 Test voice</button>
+        <span id="tts-engine" class="hint"></span>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">Avatar size <b id="av-scale-val">100</b>%</span>
+          <input id="av-scale" type="range" min="50" max="150" value="100" />
+        </label>
+        <div class="field toggles">
+          <label class="check"><input id="av-mic" type="checkbox" checked /> Mic lip-sync</label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="copy-avatar" class="ghost" type="button">Copy avatar URL</button>
+        <button id="test-donation" class="ghost" type="button">Test donation</button>
+      </div>
+
+      <div class="actions">
+        <button id="copy" class="primary">Copy OBS browser-source URL</button>
+        <a id="open" class="ghost" target="_blank" rel="noreferrer">Open overlay ↗</a>
+        <a id="avatar-link" class="ghost" target="_blank" rel="noreferrer">Cat boy avatar ↗</a>
+        <a id="model-link" class="ghost" target="_blank" rel="noreferrer">Model controls ↗</a>
+      </div>
+      <div class="urlbox"><code id="obs-url">—</code></div>
+      <p class="hint">In OBS: <b>+ → Browser</b>, paste this URL, size <b>1280 × 720</b>, then tick “Shutdown source when not visible” off. Background is transparent.</p>
+    </section>
+
+    <section class="preview-wrap">
+      <div class="preview-head">
+        <span>Preview · 16:9</span>
+        <span id="preview-note" class="muted"></span>
+      </div>
+      <div class="preview" id="preview">
+        <iframe id="frame" title="Overlay preview" allow="autoplay"></iframe>
+        <div class="preview-empty" id="empty">
+          <p>Enter a channel to load the live chat preview.</p>
+        </div>
+      </div>
+      <div class="tips">
+        <div><b>1.</b> Run the chat service: <code>systemctl --user status obs-chat-bubbles</code></div>
+        <div><b>2.</b> Add the URL as a Browser source in OBS, 1280×720.</div>
+        <div><b>3.</b> Keep the chat source at the top of the list so bubbles sit above your capture.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/control.js"></script>
+</body>
+</html>
